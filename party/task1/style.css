@@ -17,7 +17,7 @@ h1 { margin: 0 0 12px 0; font-size: 26px; }
 .room h3 { margin: 0 0 6px 0; font-size: 16px; }
 .room.found { background: #fff3b0; outline: 3px solid #e53935; }
 
-/* guests */
+
 .guests { display: flex; flex-wrap: wrap; }
 .guest { position: relative; top: 0; width: 72px; margin: 4px; padding: 4px 0; text-align: center; font-size: 11px; border-radius: 8px; }
 .guest.found { background: #fff3b0; outline: 2px solid #e53935; }

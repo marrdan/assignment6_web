@@ -1,5 +1,4 @@
-// The party from the picture.
-// Rooms are written in the order of the picture, guests go from left to right.
+
 var party = [
   {
     key: "balcony", name: "Balcony", floor: 2,

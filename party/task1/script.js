@@ -1,14 +1,13 @@
-// ---------- small helper things ----------
 
 var icons = { phone: "📱", glasses: "👓", bag: "👜", cup: "☕", crumbs: "🍰" };
 
-// "21:15" -> 1275 (minutes from midnight). Numbers are easy to compare.
+
 function toMinutes(time) {
   var parts = time.split(":");
   return Number(parts[0]) * 60 + Number(parts[1]);
 }
 
-// A simple round picture with the first letter. It is used only when the avatar link does not load.
+
 function fallbackAvatar(name) {
   var hue = 0;
   for (var i = 0; i < name.length; i++) {
@@ -21,11 +20,11 @@ function fallbackAvatar(name) {
   return "data:image/svg+xml;utf8," + encodeURIComponent(svg);
 }
 
-// ---------- Step 2: build one guest card ----------
+
 function makeCard(guest) {
   var card = $("<div></div>");
 
-  // data as classes
+  
   card.addClass("guest");
   card.addClass("color-" + guest.color);
   if (guest.aitu) {
@@ -34,7 +33,7 @@ function makeCard(guest) {
     card.addClass("not-aitu");
   }
 
-  // data as data-* attributes
+  
   card.attr("data-name", guest.name);
   card.attr("data-color", guest.color);
   card.attr("data-time", guest.time);
@@ -42,7 +41,7 @@ function makeCard(guest) {
   card.attr("data-aitu", guest.aitu ? "yes" : "no");
   card.attr("data-things", guest.things.join(" "));
 
-  // what we see
+ 
   var avatar = $("<img class='avatar'>");
   avatar.on("error", function () {
     $(this).off("error").attr("src", fallbackAvatar(guest.name));
@@ -68,7 +67,7 @@ function makeCard(guest) {
   return card;
 }
 
-// ---------- Step 2: build the whole house from the array ----------
+//step 2
 function buildParty() {
   $("#house").empty();
 
@@ -99,8 +98,9 @@ function buildParty() {
   }
 }
 
-// ---------- Step 4: the 20 cases ----------
-// Every "find" function is ONE jQuery chain that searches the page (not the array).
+
+
+//step 4
 var cases = [
   { title: "Who is in the hall?",
     find: function () {
@@ -150,7 +150,6 @@ var cases = [
 
   { title: "Who stands right next to Askar?",
     find: function () {
-      // prev() = the guest on the left, the selector after add() = the guest on the right
       return $(".guest[data-name='Askar']").prev().add(".guest[data-name='Askar'] + .guest");
     } },
 
@@ -192,7 +191,7 @@ var cases = [
 
   { title: "Who came first to each room?",
     find: function () {
-      // a guest came first if none of his neighbours in the room came earlier
+    
       return $(".guest").filter(function () {
         var minutes = $(this).data("minutes");
         return $(this).siblings().filter(function () {
@@ -233,7 +232,7 @@ var cases = [
     } }
 ];
 
-// ---------- Step 3: show the result ----------
+// show the result of a case in the #result div
 function jump(guests) {
   guests.animate({ top: -14 }, 150).animate({ top: 0 }, 150);
 }
@@ -249,16 +248,16 @@ function showResult(found) {
 }
 
 function runCase(index) {
-  buildParty();                       // build the page again before every case
-  var found = cases[index].find();    // the jQuery chain
-  found.addClass("found");            // highlight
+  buildParty();
+  var found = cases[index].find();
+  found.addClass("found");
   showResult(found);
   if (!cases[index].action && !found.first().is(".room")) {
-    jump(found);                      // found guests jump once (rooms do not jump)
+    jump(found);
   }
 }
 
-// ---------- start ----------
+
 $(function () {
   for (var i = 0; i < cases.length; i++) {
     var button = $("<button class='case-btn'></button>");

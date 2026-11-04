@@ -6,7 +6,7 @@ function toMinutes(time) {
   return Number(parts[0]) * 60 + Number(parts[1]);
 }
 
-// A simple round picture with the first letter. It is used only when the avatar link does not load.
+
 function fallbackAvatar(name) {
   var hue = 0;
   for (var i = 0; i < name.length; i++) {
@@ -19,11 +19,11 @@ function fallbackAvatar(name) {
   return "data:image/svg+xml;utf8," + encodeURIComponent(svg);
 }
 
-// ---------- Step 2: build one guest card ----------
+
 function makeCard(guest) {
   var card = $("<div></div>");
 
-  // data as classes
+
   card.addClass("guest");
   card.addClass("color-" + guest.color);
   if (guest.aitu) {
@@ -32,7 +32,7 @@ function makeCard(guest) {
     card.addClass("not-aitu");
   }
 
-  // data as data-* attributes
+  
   card.attr("data-name", guest.name);
   card.attr("data-color", guest.color);
   card.attr("data-time", guest.time);
@@ -40,7 +40,7 @@ function makeCard(guest) {
   card.attr("data-aitu", guest.aitu ? "yes" : "no");
   card.attr("data-things", guest.things.join(" "));
 
-  // what we see
+
   var avatar = $("<img class='avatar'>");
   avatar.on("error", function () {
     $(this).off("error").attr("src", fallbackAvatar(guest.name));
@@ -66,7 +66,7 @@ function makeCard(guest) {
   return card;
 }
 
-// ---------- Step 2: build the whole house from the array ----------
+
 function buildParty() {
   closeCardNow();
   $(".flyer").stop(true).remove();
@@ -95,7 +95,7 @@ function buildParty() {
         var guestsDiv = $("<div class='guests'></div>");
         for (var g = 0; g < room.guests.length; g++) {
           var card = makeCard(room.guests[g]);
-          card.attr("data-order", g);   // place in the picture order
+          card.attr("data-order", g);
           guestsDiv.append(card);
         }
         roomDiv.append(guestsDiv);
@@ -107,8 +107,8 @@ function buildParty() {
   }
 }
 
-// ---------- Step 4: the 20 cases ----------
-// Every "find" function is ONE jQuery chain that searches the page (not the array).
+
+// cases
 var cases = [
   { title: "Who is in the hall?",
     find: function () {
@@ -142,7 +142,6 @@ var cases = [
 
   { title: "Who arrived between 20:30 and 21:00, both times included?",
     find: function () {
-      // 20:30 = 1230 minutes, 21:00 = 1260 minutes
       return $(".guest").filter(function () {
         var minutes = $(this).data("minutes");
         return minutes >= 1230 && minutes <= 1260;
@@ -158,7 +157,6 @@ var cases = [
 
   { title: "Who stands right next to Askar?",
     find: function () {
-      // prev() = the guest on the left, the selector after add() = the guest on the right
       return $(".guest[data-name='Askar']").prev().add(".guest[data-name='Askar'] + .guest");
     } },
 
@@ -189,7 +187,6 @@ var cases = [
 
   { title: "Which rooms have fewer than 6 guests?",
     find: function () {
-      // a room has 6 guests when it has a 6th child. We want rooms WITHOUT it.
       return $(".room:not(:has(.guest:nth-child(6)))");
     } },
 
@@ -200,7 +197,6 @@ var cases = [
 
   { title: "Who came first to each room?",
     find: function () {
-      // a guest came first if none of his neighbours in the room came earlier
       return $(".guest").filter(function () {
         var minutes = $(this).data("minutes");
         return $(this).siblings().filter(function () {
@@ -231,8 +227,6 @@ var cases = [
   { label: "Who took the cake?",
     title: "Who took the cake? (downstairs, came after 21:00 but before 21:30, has crumbs but no cup, stands right next to an AITU student)",
     find: function () {
-      // downstairs, came after 21:00 and before 21:30 (1290), has crumbs but no cup,
-      // and the left or the right neighbour is an AITU student
       return $("#floor-1 .guest[data-things~='crumbs']").not("[data-things~='cup']").filter(function () {
         var minutes = $(this).data("minutes");
         var nextToAitu = $(this).prev().is(".aitu") || $(this).next().is(".aitu");
@@ -241,7 +235,7 @@ var cases = [
     } }
 ];
 
-// ---------- Step 3: show the result ----------
+
 function jump(guests) {
   guests.animate({ top: -14 }, 150).animate({ top: 0 }, 150);
 }
@@ -256,23 +250,23 @@ function showResult(found) {
   $("#result").text("Found: " + found.length + " - " + names.join(", "));
 }
 
-// ---------- Effect 1: Spotlight ----------
+
+
 function spotlight(found) {
   var bright;
   if (found.first().is(".room")) {
-    bright = found.find(".guest");   // a case that finds rooms: guests of these rooms stay bright
+    bright = found.find(".guest");
   } else {
     bright = found;
   }
   var pale = $(".room .guest").not(bright);
 
-  // stop("fx", true, true): finish the old fade at once and delete the waiting ones,
-  // so fast clicks never build a queue
+  
   pale.stop("fx", true, true).fadeTo(300, 0.2);
 }
 
 function clearSpotlight() {
-  // stop(true) WITHOUT jumpToEnd, then top: 0 - a guest in the middle of his jump must not stay up
+ 
   $(".room .guest").stop("fx", true).css("top", 0).fadeTo(300, 1);
   $(".found").removeClass("found");
   $("#result").text("Cleared.");
@@ -284,8 +278,7 @@ function runCase(index) {
   found.addClass("found");
   showResult(found);
 
-  // the spotlight works for every case; the found guests (not rooms) jump once.
-  // Miras jumps by himself after he has appeared, Natasha leaves, so she does not jump.
+  
   if (found.length > 0) {
     spotlight(found);
     if (!cases[index].action && !found.first().is(".room")) {
@@ -294,13 +287,14 @@ function runCase(index) {
   }
 }
 
-// ---------- Effect 2: Guest card ----------
+
+//guest info card
 var thingWords = { phone: "a phone", glasses: "glasses", bag: "a bag", cup: "a cup", crumbs: "cake crumbs" };
 
-var currentCard = null;    // the open card (jQuery object) or null
-var currentGuest = null;   // the guest that owns the open card
+var currentCard = null;  
+var currentGuest = null;
 
-// "a phone and a bag"
+
 function thingsText(things) {
   if (things === "") {
     return "Has nothing with them";
@@ -328,7 +322,7 @@ function makeCardContent(guest) {
   inner.append($("<p></p>").text(thingsText(guest.attr("data-things"))));
   inner.append($("<p></p>").text("Now in the " + room.find("h3").text().toLowerCase()));
 
-  // one button for every other room
+
   for (var i = 0; i < party.length; i++) {
     if (party[i].key !== room.attr("data-key")) {
       var button = $("<button class='move-btn'></button>");
@@ -341,7 +335,7 @@ function makeCardContent(guest) {
 }
 
 function openCard(guest) {
-  closeCard();   // only one card can be open
+  closeCard();
 
   var avatar = guest.find(".avatar");
   var start = avatar.offset();
@@ -349,19 +343,19 @@ function openCard(guest) {
 
   var card = $("<div id='info-card'></div>");
   card.append(makeCardContent(guest));
-  // the card starts as small as the photo, on the photo
+  
   card.css({ left: start.left, top: start.top, width: avatar.outerWidth(), height: avatar.outerHeight() });
   $("body").append(card);
 
-  // and grows to the full size
-  var fullHeight = card.children(".card-inner").outerHeight() + 6;   // + 2 borders of 3px
+ 
+  var fullHeight = card.children(".card-inner").outerHeight() + 6;   
   card.animate({ left: finalLeft, top: start.top, width: 260, height: fullHeight }, 300);
 
   currentCard = card;
   currentGuest = guest;
 }
 
-// the card gets small again and goes back into the photo
+
 function closeCard() {
   if (currentCard === null) {
     return;
@@ -381,13 +375,12 @@ function closeCard() {
   }
   var avatar = guest.find(".avatar");
   var end = avatar.offset();
-  // stop(true): if the card is still growing, it turns back from where it is now
   card.stop(true).animate({ left: end.left, top: end.top, width: avatar.outerWidth(), height: avatar.outerHeight() }, 250, function () {
     $(this).remove();
   });
 }
 
-// remove the card at once, without animation
+
 function closeCardNow() {
   if (currentCard !== null) {
     currentCard.stop(true).remove();
@@ -397,8 +390,8 @@ function closeCardNow() {
   $(".closing").stop(true).remove();
 }
 
-// ---------- Effect 3: Move a guest to another room ----------
-var orderCounter = 1000;   // every moved guest gets a bigger number, so he is the last one
+//move another guest to another room effect 3
+var orderCounter = 1000;
 
 function moveInArray(name, roomKey) {
   var guestData = null;
@@ -406,19 +399,18 @@ function moveInArray(name, roomKey) {
     for (var g = 0; g < party[r].guests.length; g++) {
       if (party[r].guests[g].name === name) {
         guestData = party[r].guests[g];
-        party[r].guests.splice(g, 1);   // take him out of the old room
+        party[r].guests.splice(g, 1);  
       }
     }
   }
   for (var k = 0; k < party.length; k++) {
     if (party[k].key === roomKey) {
-      party[k].guests.push(guestData);  // put him at the end of the new room
+      party[k].guests.push(guestData); 
     }
   }
 }
 
 function moveGuest(guest, roomKey) {
-  // 1. the array changes at once, so the cases always see the right party
   moveInArray(guest.attr("data-name"), roomKey);
 
   var box = $("#room-" + roomKey + " .guests");
@@ -427,28 +419,28 @@ function moveGuest(guest, roomKey) {
   var gap = parseInt(guest.css("margin-left"), 10);
   var start = guest.offset();
 
-  // 2. a copy of the guest flies, the real card waits outside the page
+  
   var flyer = guest.clone();
   flyer.addClass("flyer");
   flyer.css({ position: "absolute", left: start.left, top: start.top, margin: 0, width: guest.outerWidth() });
   $("body").append(flyer);
 
-  // 3. old room: an empty place stays and closes slowly
+  
   var oldSpace = $("<div class='space'></div>").css({ width: width, height: height });
-  oldSpace.data("w", 0);                   // this place will be 0 wide when it is closed
+  oldSpace.data("w", 0);                  
   oldSpace.insertBefore(guest);
   guest.detach();
   oldSpace.animate({ width: 0 }, 700, function () {
     $(this).remove();
   });
 
-  // 4. new room: a place opens slowly at the end
+
   var newSpace = $("<div class='space'></div>").css({ width: 0, height: height });
-  newSpace.data("w", width);               // the width this place will have when it is open
+  newSpace.data("w", width);
   box.append(newSpace);
 
-  // for a moment put every place of this room at its FINAL width, only to read where the new place will be.
-  // So even if other guests are moving now, the flyer lands on the right place.
+
+
   var spaces = box.children(".space");
   var nowWidths = spaces.map(function () { return $(this).width(); }).get();
   spaces.each(function () { $(this).css("width", $(this).data("w")); });
@@ -459,7 +451,8 @@ function moveGuest(guest, roomKey) {
   guest.attr("data-order", orderCounter);
   orderCounter++;
 
-  // 5. the copy flies to the new place; then the real card takes the place
+
+
   flyer.animate({ left: end.left + gap, top: end.top + gap }, 700, function () {
     newSpace.stop(true);
     newSpace.replaceWith(guest);
@@ -468,7 +461,7 @@ function moveGuest(guest, roomKey) {
   });
 }
 
-// ---------- Effect 4: Sort the guests of a room by time ----------
+// effect 4 
 function sortByTime(a, b) {
   return $(a).data("minutes") - $(b).data("minutes");
 }
@@ -482,7 +475,7 @@ function sortRoom(room) {
   var guests = box.children(".guest");
   var list = guests.get();
 
-  // first click: sort by time, second click: back to the picture order
+
   if (room.attr("data-sorted") === "no") {
     list.sort(sortByTime);
     room.attr("data-sorted", "yes");
@@ -493,22 +486,21 @@ function sortRoom(room) {
     room.find(".sort-btn").removeClass("active");
   }
 
-  // stop all old animations of these guests (they stay where they are now)
+
   guests.stop("fx", true, true);
   guests.stop("move", true);
 
-  // a. remember where every card is now
+
   var oldPlaces = [];
   guests.each(function (i) {
     oldPlaces[i] = $(this).offset();
   });
 
-  // b. put the cards in the new order (they jump to the new places)
+
   guests.css({ left: 0, top: 0 });
   box.append(list);
-  box.append(box.children(".space"));   // empty places stay at the end
+  box.append(box.children(".space"));
 
-  // c. move every card back to its OLD place with left/top, then slide to 0
   guests.each(function (i) {
     var newPlace = $(this).offset();
     $(this).css({ left: oldPlaces[i].left - newPlace.left, top: oldPlaces[i].top - newPlace.top });
@@ -516,7 +508,7 @@ function sortRoom(room) {
   guests.animate({ left: 0, top: 0 }, { duration: 700, queue: "move" }).dequeue("move");
 }
 
-// ---------- start ----------
+
 $(function () {
   for (var i = 0; i < cases.length; i++) {
     var button = $("<button class='case-btn'></button>");
@@ -533,7 +525,7 @@ $(function () {
 
   $("#clear-btn").on("click", clearSpotlight);
 
-  // click on a guest: open his card (click on the same guest again: close it)
+
   $("#house").on("click", ".guest", function () {
     var guest = $(this);
     if (currentGuest !== null && currentGuest[0] === guest[0]) {
@@ -543,7 +535,7 @@ $(function () {
     }
   });
 
-  // click outside the card (and not on a guest): close the card
+
   $(document).on("click", function (event) {
     var inside = $(event.target).closest("#info-card, .guest").length > 0;
     if (!inside) {
@@ -551,14 +543,13 @@ $(function () {
     }
   });
 
-  // Esc: close the card
+
   $(document).on("keydown", function (event) {
     if (event.key === "Escape") {
       closeCard();
     }
   });
 
-  // move buttons are inside the card
   $(document).on("click", ".move-btn", function () {
     var guest = currentGuest;
     if (guest === null) {
@@ -569,7 +560,7 @@ $(function () {
     moveGuest(guest, roomKey);
   });
 
-  // sort buttons
+
   $("#house").on("click", ".sort-btn", function () {
     sortRoom($(this).closest(".room"));
   });
