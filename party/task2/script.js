@@ -237,6 +237,7 @@ var cases = [
 
 
 function jump(guests) {
+  guests.stop(true).css("top", 0);
   guests.animate({ top: -14 }, 150).animate({ top: 0 }, 150);
 }
 
@@ -261,8 +262,8 @@ function spotlight(found) {
   }
   var pale = $(".room .guest").not(bright);
 
-  
-  pale.stop("fx", true, true).fadeTo(300, 0.2);
+  bright.stop(true).fadeTo(300, 1);
+  pale.stop(true).fadeTo(300, 0.2);
 }
 
 function clearSpotlight() {
